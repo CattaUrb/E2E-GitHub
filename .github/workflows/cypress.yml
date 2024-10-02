@@ -1,0 +1,53 @@
+name: Pruebas Cypress con Mochawesome
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  cypress-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4  # Clona el repositorio
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4  # Configura Node.js
+        with:
+          node-version: 'node'  # Usa la última versión estable de Node.js
+
+      - name: Install dependencies
+        run: npm install  # Instala todas las dependencias del proyecto
+
+      - name: Install Mochawesome
+        run: npm install --save-dev mochawesome  # Instala el reporter mochawesome
+
+      - name: Run Cypress Tests
+        run: npx cypress run --env allure=true
+
+      - name: Run Cypress & mochawesome Tests
+        run: npx cypress run --reporter mochawesome --reporter-options reportDir=cypress/logs,overwrite=false,html=false,json=true  # Ejecuta Cypress con mochawesome
+
+
+
+      # Este paso solo se ejecutará si el paso de "Run Cypress Tests" tuvo éxito
+      - name: Upload Cypress Logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-logs
+          path: cypress/logs/*.json  # Sube los logs en formato JSON
+
+      # Subir videos grabados por Cypress (siempre se graban, incluso si las pruebas fallan)
+      - name: Upload Cypress Videos
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-videos
+          path: cypress/videos/**/*.mp4  # Ruta de los videos grabados
+
+      # Subir capturas de pantalla si hubo fallos en las pruebas
+      - name: Upload Cypress Screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots/**/*.png  # Ruta de las capturas de pantalla
